@@ -169,12 +169,79 @@ const EnquiryForm = ({ indentItem = null, onClose, onSuccess }) => {
     }
   };
 
+  const fetchIndentDataByNumber = async (indentNo) => {
+  try {
+    const response = await fetch(
+      'https://script.google.com/macros/s/AKfycbxmXLxCqjFY9yRDLoYEjqU9LTcpfV7r9ueBuOsDsREkdGknbdE_CZBW7ZHTdP3n0NzOfQ/exec?sheet=INDENT&action=fetch'
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.data && result.data.length >= 7) {
+      const headers = result.data[5].map(h => h.trim());
+      const dataRows = result.data.slice(6);
+      
+      // Find the row with matching indent number (Column B, index 1)
+      const matchingRow = dataRows.find(row => row[1] === indentNo);
+      
+      if (matchingRow) {
+        return {
+          indentNo: matchingRow[1],      // Column B (index 1)
+          post: matchingRow[2],           // Column C (index 2)
+          department: matchingRow[17]     // Column R (index 17)
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching indent data:', error);
+    return null;
+  }
+};
+
   useEffect(() => {
     fetchExistingData();
   }, []);
 
   useEffect(() => {
-    if (indentItem) {
+  const initializeForm = async () => {
+    // Check for indent parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const indentParam = urlParams.get('indent');
+    
+    if (indentParam) {
+      // Fetch data from INDENT sheet based on URL parameter
+      const indentData = await fetchIndentDataByNumber(indentParam);
+      
+      if (indentData) {
+        setSelectedItem({
+          indentNo: indentData.indentNo,
+          post: indentData.post || '',
+          gender: '',
+          prefer: '',
+          numberOfPost: '',
+          competitionDate: '',
+          socialSite: '',
+          status: 'NeedMore',
+          plannedDate: '',
+          actual: '',
+          experience: ''
+        });
+        
+        setFormData(prev => ({
+          ...prev,
+          department: indentData.department || ''
+        }));
+      } else {
+        toast.error('Indent number not found in records');
+      }
+    } else if (indentItem) {
+      // Original logic for when indentItem prop is passed
       setSelectedItem(indentItem);
       setFormData(prev => ({
         ...prev,
@@ -200,7 +267,10 @@ const EnquiryForm = ({ indentItem = null, onClose, onSuccess }) => {
     
     const candidateNo = generateCandidateNumber();
     setGeneratedCandidateNo(candidateNo);
-  }, [indentItem, indentData, enquiryData]);
+  };
+  
+  initializeForm();
+}, [indentItem, indentData, enquiryData]);
 
   const formatDOB = (dateString) => {
     if (!dateString) return '';
