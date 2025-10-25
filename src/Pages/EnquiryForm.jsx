@@ -26,6 +26,7 @@ const EnquiryForm = ({ indentItem = null, onClose, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
   const [enquiryData, setEnquiryData] = useState([]);
   const [indentData, setIndentData] = useState([]);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   // Google Drive folder ID for file uploads
   const GOOGLE_DRIVE_FOLDER_ID = '1UNUeS2GN0rLh3BB06DvGYXYbVmzkXCdZ';
@@ -477,28 +478,28 @@ const handleSubmit = async (e) => {
       toast.success('Enquiry submitted successfully!');
     }
 
-    // Reset form data and refresh page
-    setFormData({
-      candidateName: '',
-      candidateDOB: '',
-      candidatePhone: '',
-      candidateEmail: '',
-      previousCompany: '',
-      jobExperience: '',
-      department: '',
-      previousPosition: '',
-      maritalStatus: '',
-      candidatePhoto: null,
-      candidateResume: null,
-      presentAddress: '',
-      aadharNo: '',
-      status: 'NeedMore'
-    });
+    setShowSuccessAnimation(true);
 
-    // Refresh the page after successful submission
+    // Reset form data and refresh page after animation
     setTimeout(() => {
+      setFormData({
+        candidateName: '',
+        candidateDOB: '',
+        candidatePhone: '',
+        candidateEmail: '',
+        previousCompany: '',
+        jobExperience: '',
+        department: '',
+        previousPosition: '',
+        maritalStatus: '',
+        candidatePhoto: null,
+        candidateResume: null,
+        presentAddress: '',
+        aadharNo: '',
+        status: 'NeedMore'
+      });
       window.location.reload();
-    }, 1000);
+    }, 2500);
 
   } catch (error) {
     console.error('Submission error:', error);
@@ -572,13 +573,14 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               value={selectedItem?.post || ''}
+              disabled
               onChange={(e) => {
                 setSelectedItem((prev) => ({
                   ...prev,
                   post: e.target.value,
                 }));
               }}
-              className="w-full border border-gray-300 border-opacity-30 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-700"
+              className="w-full border border-gray-300 border-opacity-30 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 text-gray-700"
             />
           </div>
           <div>
@@ -589,8 +591,9 @@ const handleSubmit = async (e) => {
               type="text"
               name="department"
               value={formData.department}
+              disabled
               onChange={handleInputChange}
-              className="w-full border border-gray-300 border-opacity-30 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-700"
+              className="w-full border border-gray-300 border-opacity-30 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 text-gray-700"
             />
           </div>
           <div>
@@ -861,6 +864,35 @@ const handleSubmit = async (e) => {
           </button>
         </div>
       </form>
+      {/* Success Animation */}
+      {showSuccessAnimation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center shadow-2xl animate-scaleIn">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center animate-pulse">
+                <svg
+                  className="w-16 h-16 text-green-600 animate-checkmark"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <div className="absolute inset-0 rounded-full border-4 border-green-500 animate-ripple"></div>
+            </div>
+            <h3 className="mt-6 text-2xl font-bold text-gray-800">Success!</h3>
+            <p className="mt-2 text-gray-600 text-center">
+              Enquiry submitted successfully
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
